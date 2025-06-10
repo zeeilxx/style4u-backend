@@ -1,35 +1,25 @@
+// categoryroutes.js
+
 const express = require("express");
-const mysql = require("mysql");
 const router = express.Router();
-// Konfigurasi koneksi MySQL
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root", // Ganti dengan user MySQL Anda
-  password: "", // Ganti dengan password MySQL Anda
-  database: "style4u_db",
-});
-// Koneksi ke MySQL
-db.connect((err) => {
-  if (err) {
-    throw err;
-  }
-  console.log("Connected to MySQL");
-});
-// CREATE Category (POST)
+const db = require("../config/db"); // sesuaikan dengan lokasi file db.js
+
+// CREATE Category (POST) - TIDAK PERLU DIUBAH
 router.post("/category", (req, res) => {
-  const { id, name } = req.body;
-  const sql = `INSERT INTO category (id, name,) VALUES (?,
-?, ?)`;
-  db.query(sql, [id, name], (err, result) => {
+  const { name } = req.body;
+  const sql = `INSERT INTO category (name) VALUES (?)`;
+  db.query(sql, [name], (err, result) => {
     if (err) {
       return res.status(500).send(err);
     }
-    res.status(201).send({ id: result.insertId, id, name });
+    res.status(201).send({ id: result.insertId, name });
   });
 });
+
 // READ all category (GET)
 router.get("/category", (req, res) => {
-  const sql = `SELECT * FROM category`;
+  const sql = `SELECT id_cat AS id, name FROM category`;
+
   db.query(sql, (err, results) => {
     if (err) {
       return res.status(500).send(err);
@@ -38,9 +28,9 @@ router.get("/category", (req, res) => {
   });
 });
 
-// READ single category by id (GET)
+// READ single category by id (GET) - TIDAK PERLU DIUBAH
 router.get("/category/:id", (req, res) => {
-  const sql = `SELECT * FROM category WHERE id = ?`;
+  const sql = `SELECT * FROM category WHERE id_cat = ?`; // Sesuaikan dengan primary key Anda
   db.query(sql, [req.params.id], (err, result) => {
     if (err) {
       return res.status(500).send(err);
@@ -51,12 +41,12 @@ router.get("/category/:id", (req, res) => {
     res.status(200).send(result[0]);
   });
 });
-// UPDATE category by id (PUT)
+
+// UPDATE category by id (PUT) - TIDAK PERLU DIUBAH
 router.put("/category/:id", (req, res) => {
-  const { id, name } = req.body;
-  const sql = `UPDATE category SET id = ?, name = ? WHERE
-id = ?`;
-  db.query(sql, [id, name, , req.params.id], (err, result) => {
+  const { name } = req.body;
+  const sql = `UPDATE category SET name = ? WHERE id_cat = ?`; // Sesuaikan dengan primary key Anda
+  db.query(sql, [name, req.params.id], (err, result) => {
     if (err) {
       return res.status(500).send(err);
     }
@@ -66,9 +56,10 @@ id = ?`;
     res.status(200).send({ id: req.params.id, name });
   });
 });
-// DELETE category by id (DELETE)
+
+// DELETE category by id (DELETE) - TIDAK PERLU DIUBAH
 router.delete("/category/:id", (req, res) => {
-  const sql = `DELETE FROM category WHERE id = ?`;
+  const sql = `DELETE FROM category WHERE id_cat = ?`; // Sesuaikan dengan primary key Anda
   db.query(sql, [req.params.id], (err, result) => {
     if (err) {
       return res.status(500).send(err);
@@ -79,4 +70,5 @@ router.delete("/category/:id", (req, res) => {
     res.status(200).send({ message: "category deleted successfully" });
   });
 });
+
 module.exports = router;
