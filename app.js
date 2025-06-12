@@ -11,6 +11,8 @@ const brandRoutes = require("./routes/brandroutes");
 const wishlistRoutes = require("./routes/wishlistroutes");
 const addressRoutes = require("./routes/addressroutes");
 const orderRoutes = require("./routes/orderroutes");
+const dashboardRoutes = require("./routes/dashboardroutes");
+const mysteryBoxRoutes = require("./routes/mysteryboxroutes");
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -35,6 +37,8 @@ app.use("/api", brandRoutes);
 app.use("/api", wishlistRoutes);
 app.use("/api", addressRoutes);
 app.use("/api", orderRoutes);
+app.use("/api/admin", dashboardRoutes);
+app.use("/api", mysteryBoxRoutes);
 
 app.listen(port, () => {
   console.log(`Server berjalan pada port ${port}`);

@@ -8,7 +8,6 @@ exports.getUserProfile = (req, res) => {
     return res.status(403).json({ message: "Akses ditolak." });
   }
 
-  // Query sekarang hanya mengambil data dari tabel 'user'
   const sql = `SELECT id_user, username, name, email, no_handphone, jenis_kelamin FROM user WHERE id_user = ?`;
 
   db.query(sql, [req.params.id_user], (err, result) => {
@@ -23,7 +22,6 @@ exports.getUserProfile = (req, res) => {
   });
 };
 
-// Fungsi untuk UPDATE profil user (hanya data pribadi)
 exports.updateUserProfile = (req, res) => {
   const id_user_param = parseInt(req.params.id_user);
 
@@ -31,10 +29,8 @@ exports.updateUserProfile = (req, res) => {
     return res.status(403).json({ message: "Akses ditolak." });
   }
 
-  // Ambil hanya data pribadi dari body request
   const { username, name, email, no_handphone, jenis_kelamin } = req.body;
 
-  // Query UPDATE sekarang hanya untuk data di tabel 'user'
   const sql = `
     UPDATE user 
     SET username = ?, name = ?, email = ?, no_handphone = ?, jenis_kelamin = ?

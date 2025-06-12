@@ -1,17 +1,12 @@
-// controllers/wishlistController.js
-
 const db = require("../config/db");
 
-// Mengambil semua item di wishlist
 exports.getWishlist = (req, res) => {
   const id_user = req.params.id_user;
 
-  // Pastikan user hanya bisa melihat wishlistnya sendiri (atau admin)
   if (req.user.id_user !== parseInt(id_user) && req.user.id_role !== 1) {
     return res.status(403).json({ message: "Akses ditolak." });
   }
 
-  // Query ini mengambil detail produk yang ada di wishlist user
   const sql = `
     SELECT 
       p.*,
@@ -33,7 +28,6 @@ exports.getWishlist = (req, res) => {
   });
 };
 
-// Menambahkan item ke wishlist
 exports.addToWishlist = (req, res) => {
   const id_user = req.params.id_user;
   const { id_produk } = req.body;
@@ -49,7 +43,6 @@ exports.addToWishlist = (req, res) => {
   const sql = "INSERT INTO wishlist (id_user, id_produk) VALUES (?, ?)";
   db.query(sql, [id_user, id_produk], (err, result) => {
     if (err) {
-      // Jika error karena duplikat (aturan UNIQUE), kirim pesan yang sesuai
       if (err.code === "ER_DUP_ENTRY") {
         return res
           .status(409)
@@ -63,10 +56,9 @@ exports.addToWishlist = (req, res) => {
   });
 };
 
-// Menghapus item dari wishlist
 exports.removeFromWishlist = (req, res) => {
   const id_user = req.params.id_user;
-  const { id_produk } = req.body; // Terima id_produk dari body
+  const { id_produk } = req.body;
 
   if (!id_produk) {
     return res.status(400).json({ message: "id_produk wajib diisi." });

@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
 
-// Tambah stok per size
 router.post("/", (req, res) => {
   const { id_produk, size, stok } = req.body;
   const sql = `
@@ -17,7 +16,6 @@ router.post("/", (req, res) => {
   });
 });
 
-// Ambil semua stok berdasarkan produk
 router.get("/:id_produk", (req, res) => {
   const sql = `
     SELECT size, stok FROM product_stocks WHERE id_produk = ?
@@ -28,7 +26,6 @@ router.get("/:id_produk", (req, res) => {
   });
 });
 
-// Update stok per size
 router.put("/:id", (req, res) => {
   const { size, stok } = req.body;
   const sql = `
@@ -43,7 +40,6 @@ router.put("/:id", (req, res) => {
   });
 });
 
-// Hapus stok size
 router.delete("/:id", (req, res) => {
   const sql = `DELETE FROM product_stocks WHERE id = ?`;
   db.query(sql, [req.params.id], (err, result) => {

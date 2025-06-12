@@ -1,14 +1,18 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../config/db"); // koneksi db
+const db = require("../config/db");
 
-// Buat keranjang jika belum ada (TIDAK ADA PERUBAHAN)
+const { verifyToken } = require("../middleware/authMiddleware"); // Impor verifyToken
+
+// TERAPKAN MIDDLEWARE DI SINI UNTUK MELINDUNGI SEMUA RUTE KERANJANG
+// router.use(verifyToken);
+
 const ensureCartExists = (id_user, callback) => {
   const sql = "SELECT * FROM cart WHERE id_user = ?";
   db.query(sql, [id_user], (err, results) => {
     if (err) return callback(err);
     if (results.length > 0) return callback(null, results[0].id_cart);
-    // Buat cart baru
+
     db.query(
       "INSERT INTO cart (id_user) VALUES (?)",
       [id_user],
@@ -20,20 +24,19 @@ const ensureCartExists = (id_user, callback) => {
   });
 };
 
-// GET semua item keranjang (TIDAK ADA PERUBAHAN, SUDAH BENAR)
-router.get("/cart/:id_user", (req, res) => {
-  const id_user = req.params.id_user;
+router.get("/cart", verifyToken, (req, res) => {
+  // Ambil id_user dari token yang sudah diverifikasi, BUKAN dari params
+  const id_user = req.user.id_user;
+
+  // Hapus pengecekan 'if' yang lama karena tidak lagi relevan
+
   const sql = `
     SELECT 
-      ci.id_produk,
-      p.nama AS name,
-      ci.quantity AS qty,
-      ci.size,
-      p.harga AS price,
-      p.image_url AS image
+      ci.id_cart_item, ci.id_produk, p.nama AS name, ci.quantity AS qty,
+      ci.size, p.harga AS price, p.image_url AS image, ci.custom_details
     FROM cart c
     JOIN cart_item ci ON c.id_cart = ci.id_cart
-    JOIN produk p ON ci.id_produk = p.id_produk
+    LEFT JOIN produk p ON ci.id_produk = p.id_produk
     WHERE c.id_user = ?
   `;
   db.query(sql, [id_user], (err, results) => {
@@ -42,10 +45,9 @@ router.get("/cart/:id_user", (req, res) => {
   });
 });
 
-// Tambah produk ke keranjang (TIDAK ADA PERUBAHAN, SUDAH BENAR)
-router.post("/cart/:id_user/add", (req, res) => {
-  const id_user = req.params.id_user;
-  const { id_produk, quantity, size } = req.body; 
+router.post("/cart/add", verifyToken, (req, res) => {
+  const id_user = req.user.id_user; // Ambil id_user dari token
+  const { id_produk, quantity, size } = req.body;
 
   if (!id_produk || !quantity || !size) {
     return res
@@ -82,40 +84,46 @@ router.post("/cart/:id_user/add", (req, res) => {
   });
 });
 
-// UPDATE kuantitas item di keranjang
-router.put("/cart/:id_user/update", (req, res) => {
-    const id_user = req.params.id_user;
-    const { id_produk, size, quantity } = req.body;
-  
-    if (!id_produk || !size || quantity === undefined) {
-      return res
-        .status(400)
-        .json({ message: "id_produk, size, dan quantity wajib diisi" });
-    }
-  
-    if (quantity < 1) {
-      return res.status(400).json({ message: "Kuantitas minimal adalah 1" });
-    }
-  
-    ensureCartExists(id_user, (err, id_cart) => {
+router.put("/cart/:id_user/update", verifyToken, (req, res) => {
+  const id_user = req.params.id_user;
+  const { id_produk, size, quantity } = req.body;
+
+  if (!id_produk || !size || quantity === undefined) {
+    return res
+      .status(400)
+      .json({ message: "id_produk, size, dan quantity wajib diisi" });
+  }
+
+  if (quantity < 1) {
+    return res.status(400).json({ message: "Kuantitas minimal adalah 1" });
+  }
+
+  ensureCartExists(id_user, (err, id_cart) => {
+    if (err) return res.status(500).send(err);
+
+    const updateSql =
+      "UPDATE cart_item SET quantity = ? WHERE id_cart = ? AND id_produk = ? AND size = ?";
+    db.query(updateSql, [quantity, id_cart, id_produk, size], (err, result) => {
       if (err) return res.status(500).send(err);
-  
-      const updateSql =
-        "UPDATE cart_item SET quantity = ? WHERE id_cart = ? AND id_produk = ? AND size = ?";
-      db.query(updateSql, [quantity, id_cart, id_produk, size], (err, result) => {
-        if (err) return res.status(500).send(err);
-        if (result.affectedRows === 0) {
-          return res.status(404).json({ message: "Item tidak ditemukan di keranjang" });
-        }
-        res.status(200).json({ message: "Kuantitas item diperbarui" });
-      });
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ message: "Item tidak ditemukan di keranjang" });
+      }
+      res.status(200).json({ message: "Kuantitas item diperbarui" });
     });
   });
+});
 
-// Hapus 1 produk dari keranjang (TIDAK ADA PERUBAHAN, SUDAH BENAR)
-router.delete("/cart/:id_user/remove", (req, res) => {
-  const id_user = req.params.id_user;
+router.post("/cart/remove", verifyToken, (req, res) => {
+  // <-- PERUBAHAN DI SINI
+  const id_user = req.user.id_user;
   const { id_produk, size } = req.body;
+
+  // Tambahkan validasi untuk memastikan body tidak kosong
+  if (!id_produk || !size) {
+    return res.status(400).json({ message: "id_produk dan size diperlukan." });
+  }
 
   ensureCartExists(id_user, (err, id_cart) => {
     if (err) return res.status(500).send(err);
@@ -124,13 +132,17 @@ router.delete("/cart/:id_user/remove", (req, res) => {
       "DELETE FROM cart_item WHERE id_cart = ? AND id_produk = ? AND size = ?";
     db.query(deleteSql, [id_cart, id_produk, size], (err, result) => {
       if (err) return res.status(500).send(err);
+      if (result.affectedRows === 0) {
+        return res
+          .status(404)
+          .json({ message: "Item tidak ditemukan di keranjang." });
+      }
       res.status(200).json({ message: "Produk dihapus dari keranjang" });
     });
   });
 });
 
-// Kosongkan keranjang (TIDAK ADA PERUBAHAN, SUDAH BENAR)
-router.delete("/cart/:id_user/clear", (req, res) => {
+router.delete("/cart/:id_user/clear", verifyToken, (req, res) => {
   const id_user = req.params.id_user;
 
   ensureCartExists(id_user, (err, id_cart) => {

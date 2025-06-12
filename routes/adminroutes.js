@@ -1,13 +1,11 @@
-// routes/adminroutes.js
 const express = require("express");
 const router = express.Router();
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-const SECRET_KEY = "rahasia_jwt"; // Harus .env di production
+const SECRET_KEY = "rahasia_jwt"; 
 
-// Middleware verifikasi token
 const verifyToken = (req, res, next) => {
   const bearer = req.headers.authorization;
   if (!bearer || !bearer.startsWith("Bearer ")) {
@@ -68,7 +66,7 @@ router.post("/register/admin", verifyToken, async (req, res) => {
   }
 });
 
-// ✅ Lihat semua admin
+//  Lihat semua admin
 router.get("/admins", verifyToken, (req, res) => {
   const sql = `SELECT id_user, name, email, id_role FROM user WHERE id_role = 1`;
   db.query(sql, (err, results) => {
@@ -77,7 +75,7 @@ router.get("/admins", verifyToken, (req, res) => {
   });
 });
 
-// ✅ Lihat semua user (hanya admin)
+//  Lihat semua user (hanya admin)
 router.get("/user", verifyToken, (req, res) => {
   if (req.user.id_role !== 1) {
     return res.status(403).json({ message: "Akses ditolak. Hanya admin." });
@@ -90,7 +88,7 @@ router.get("/user", verifyToken, (req, res) => {
   });
 });
 
-// ✅ Update user (admin)
+//  Update user (admin)
 router.put("/user/:id_user", verifyToken, async (req, res) => {
   const { id_role, name, password, password_confirm, email, created } =
     req.body;
@@ -123,7 +121,7 @@ router.put("/user/:id_user", verifyToken, async (req, res) => {
   );
 });
 
-// ✅ Delete user (admin)
+//  Delete user (admin)
 router.delete("/user/:id", verifyToken, (req, res) => {
   if (req.user.id_role !== 1) {
     return res

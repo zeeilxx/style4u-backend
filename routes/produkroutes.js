@@ -15,14 +15,10 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// CREATE Produk (sudah benar, tidak ada perubahan)
 router.post("/produk", upload.single("image"), (req, res) => {
-  // 1. Ambil 'gender' dari req.body
   const { nama, id_cat, id_brand, deskripsi, harga, id_grade, stok, gender } =
     req.body;
   const image_url = req.file ? req.file.filename : null;
-
-  // 2. Tambahkan 'gender' ke dalam query INSERT
   const sqlProduk = `
       INSERT INTO produk (nama, id_cat, id_brand, deskripsi, harga, image_url, id_grade, gender)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -30,7 +26,6 @@ router.post("/produk", upload.single("image"), (req, res) => {
 
   db.query(
     sqlProduk,
-    // 3. Tambahkan 'gender' ke dalam array parameter
     [nama, id_cat, id_brand, deskripsi, harga, image_url, id_grade, gender],
     (err, result) => {
       if (err) return res.status(500).send(err);
@@ -73,10 +68,7 @@ router.post("/produk", upload.single("image"), (req, res) => {
   );
 });
 
-// READ Semua Produk
 router.get("/produk", (req, res) => {
-  // --- QUERY DIPERBARUI DENGAN JOIN ---
-  // Kita mengambil nama dari tabel category, brands, dan grades
   const sql = `
     SELECT 
       p.*, 
@@ -103,7 +95,6 @@ router.get("/produk", (req, res) => {
   });
 });
 
-// READ Produk by ID
 router.get("/produk/:id", (req, res) => {
   const sql = `
     SELECT p.*,
@@ -126,7 +117,6 @@ router.get("/produk/:id", (req, res) => {
   });
 });
 
-// DELETE Produk (tidak ada perubahan)
 router.delete("/produk/:id", (req, res) => {
   const sql = `DELETE FROM produk WHERE id_produk = ?`;
   db.query(sql, [req.params.id], (err, result) => {
@@ -137,7 +127,6 @@ router.delete("/produk/:id", (req, res) => {
   });
 });
 
-// UPDATE Produk by ID
 router.put("/produk/:id", upload.single("image"), (req, res) => {
   const id_produk = req.params.id;
   const { nama, id_cat, id_brand, deskripsi, harga, id_grade, stok, gender } =
