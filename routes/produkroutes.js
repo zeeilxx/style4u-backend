@@ -69,29 +69,81 @@ router.post("/produk", upload.single("image"), (req, res) => {
 });
 
 router.get("/produk", (req, res) => {
-  const sql = `
+  const {
+    search,
+    category,
+    brand,
+    grade,
+    gender,
+    min_price,
+    max_price,
+    sort_by,
+  } = req.query;
+
+  let sql = `
     SELECT 
-      p.*, 
+      p.id_produk, p.nama, p.deskripsi, p.harga, p.image_url, p.gender,
       c.name AS category_name,
       b.nama AS brand_name,
       g.nama_grade,
-      CONCAT('[', IFNULL(GROUP_CONCAT(JSON_OBJECT('size', ps.size, 'stok', ps.stok)), ''), ']') AS stocks
+      (SELECT SUM(ps.stok) FROM product_stocks ps WHERE ps.id_produk = p.id_produk) as total_stock
     FROM produk p
     LEFT JOIN category c ON p.id_cat = c.id_cat
     LEFT JOIN brands b ON p.id_brand = b.id_brand
     LEFT JOIN grades g ON p.id_grade = g.id_grade
-    LEFT JOIN product_stocks ps ON p.id_produk = ps.id_produk
-    GROUP BY p.id_produk
   `;
 
-  db.query(sql, (err, results) => {
-    if (err) return res.status(500).send(err);
+  // Inisialisasi filter dengan kondisi untuk mengecualikan Mystery Box
+  const whereClauses = ["p.id_produk != ?"];
+  const params = [99999];
 
-    const finalResults = results.map((p) => ({
-      ...p,
-      stocks: JSON.parse(p.stocks),
-    }));
-    res.status(200).send(finalResults);
+  if (search) {
+    whereClauses.push("(p.nama LIKE ? OR p.deskripsi LIKE ?)");
+    params.push(`%${search}%`, `%${search}%`);
+  }
+  if (category) {
+    whereClauses.push("c.name = ?");
+    params.push(category);
+  }
+  if (brand) {
+    whereClauses.push("b.nama = ?");
+    params.push(brand);
+  }
+  if (grade) {
+    whereClauses.push("g.nama_grade = ?");
+    params.push(grade);
+  }
+  if (gender) {
+    whereClauses.push("p.gender = ?");
+    params.push(gender);
+  }
+  if (min_price) {
+    whereClauses.push("p.harga >= ?");
+    params.push(min_price);
+  }
+  if (max_price) {
+    whereClauses.push("p.harga <= ?");
+    params.push(max_price);
+  }
+
+  if (whereClauses.length > 0) {
+    sql += " WHERE " + whereClauses.join(" AND ");
+  }
+
+  let orderByClause = " ORDER BY p.id_produk DESC";
+  if (sort_by === "price_asc") {
+    orderByClause = " ORDER BY p.harga ASC";
+  } else if (sort_by === "price_desc") {
+    orderByClause = " ORDER BY p.harga DESC";
+  }
+  sql += orderByClause;
+
+  db.query(sql, params, (err, results) => {
+    if (err) {
+      console.error("Database query error:", err);
+      return res.status(500).send(err);
+    }
+    res.status(200).send(results);
   });
 });
 
