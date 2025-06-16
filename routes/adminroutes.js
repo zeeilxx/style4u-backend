@@ -45,8 +45,8 @@ router.post("/register/admin", verifyToken, async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const id_role = 1;
 
-    const sql = `INSERT INTO user (id_role, name, password, password_confirm, email, created)
-                 VALUES (?, ?, ?, ?, ?, NOW())`;
+    const sql = `INSERT INTO user (id_role, name, password, email, created_at)
+                 VALUES (?, ?, ?, ?, NOW())`;
 
     db.query(
       sql,
@@ -90,7 +90,7 @@ router.get("/user", verifyToken, (req, res) => {
 
 //  Update user (admin)
 router.put("/user/:id_user", verifyToken, async (req, res) => {
-  const { id_role, name, password, password_confirm, email, created } =
+  const { id_role, name, password, email, created_at } =
     req.body;
 
   if (password !== password_confirm) {
@@ -99,7 +99,7 @@ router.put("/user/:id_user", verifyToken, async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const sql = `UPDATE user SET id_role = ?, name = ?, password = ?, password_confirm = ?, email = ?, created = ? WHERE id_user = ?`;
+  const sql = `UPDATE user SET id_role = ?, name = ?, password = ?, email = ?, created_at = ? WHERE id_user = ?`;
   db.query(
     sql,
     [

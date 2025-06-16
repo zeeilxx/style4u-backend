@@ -82,7 +82,7 @@ router.get("/produk", (req, res) => {
 
   let sql = `
     SELECT 
-      p.id_produk, p.nama, p.deskripsi, p.harga, p.image_url, p.gender,
+      p.id_produk, p.nama, p.id_cat, p.deskripsi, p.harga, p.image_url, p.gender,
       c.name AS category_name,
       b.nama AS brand_name,
       g.nama_grade,

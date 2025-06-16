@@ -61,8 +61,8 @@ exports.login = (req, res) => {
         id_role: user.id_role,
         name: user.name,
       },
-      SECRET_KEY,
-      { expiresIn: "1h" }
+      SECRET_KEY
+      // { expiresIn: "1h" }
     );
 
     res.json({
