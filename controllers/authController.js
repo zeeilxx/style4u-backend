@@ -2,7 +2,7 @@ const db = require("../config/db");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 
-const SECRET_KEY = "rahasia_jwt";
+const SECRET_KEY = process.env.SECRET_KEY;
 
 // REGISTER
 exports.register = async (req, res) => {
