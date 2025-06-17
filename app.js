@@ -2,6 +2,9 @@ require("dotenv").config();
 
 const express = require("express");
 const bodyParser = require("body-parser");
+const cors = require("cors"); // Impor cors
+
+// Impor semua rute Anda
 const categoryRoutes = require("./routes/categoryroutes");
 const userRoutes = require("./routes/userroutes");
 const cartRoutes = require("./routes/cartroutes");
@@ -18,16 +21,17 @@ const mysteryBoxRoutes = require("./routes/mysteryboxroutes");
 
 const app = express();
 const port = process.env.PORT || 3001;
+const corsOptions = {
+  origin: process.env.FRONTEND_URL,
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
-const cors = require("cors");
-app.use(
-  cors({
-    origin: "http://localhost:3000",
-    credentials: true,
-  })
-);
 app.use("/uploads", express.static("uploads"));
+
 app.use(bodyParser.json());
+
 app.use("/api", categoryRoutes);
 app.use("/api", userRoutes);
 app.use("/api", cartRoutes);
@@ -42,6 +46,7 @@ app.use("/api", orderRoutes);
 app.use("/api/admin", dashboardRoutes);
 app.use("/api", mysteryBoxRoutes);
 
+// Menjalankan server
 app.listen(port, () => {
   console.log(`Server berjalan pada port ${port}`);
 });
