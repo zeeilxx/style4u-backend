@@ -190,7 +190,7 @@ router.put("/produk/:id", upload.single("image"), (req, res) => {
   let sqlProdukParams;
 
   if (image_url) {
-    sqlProduk = `UPDATE produk SET nama = ?, id_cat = ?, id_brand = ?, deskripsi = ?, harga = ?, image_url = ?, id_grade = ? WHERE id_produk = ?`;
+    sqlProduk = `UPDATE produk SET nama = ?, id_cat = ?, id_brand = ?, deskripsi = ?, harga = ?, image_url = ?, id_grade = ?, gender = ? WHERE id_produk = ?`;
     sqlProdukParams = [
       nama,
       id_cat,

@@ -3,7 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors"); // Impor cors
-
+const path = require("path");
 // Impor semua rute Anda
 const categoryRoutes = require("./routes/categoryroutes");
 const userRoutes = require("./routes/userroutes");
@@ -28,7 +28,7 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(bodyParser.json());
 
